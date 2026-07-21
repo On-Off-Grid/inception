@@ -1,15 +1,17 @@
-# Pull Request: Implementation of Inception Multi-Container Infrastructure Stack
+# Pull Request: Implementation & PHP 8.2 Upgrade of Inception Multi-Container Infrastructure Stack
 
 ## 📌 Summary of Changes
 
-This Pull Request introduces the complete architecture, container definitions, network policies, storage drivers, security parameters, and lifecycle tooling for the **42 Inception** infrastructure project. 
+This Pull Request introduces the complete architecture, container definitions, network policies, storage drivers, security parameters, lifecycle tooling, and PHP version upgrades for the **42 Inception** infrastructure project.
 
-The stack is designed according to strict system administration rules:
-- **Zero pre-built application images**: Built entirely from custom `Dockerfile` specifications using `debian:bullseye`.
+Key highlights of this implementation & update:
+- **Zero pre-built application images**: Built entirely from custom `Dockerfile` specifications (`debian:bullseye` for MariaDB/NGINX and `debian:bookworm` for WordPress).
+- **PHP 8.2 Upgrade**: Upgraded WordPress container base image to `debian:bookworm` running **PHP 8.2-FPM**, resolving PHP 7.4 end-of-life security warnings and WordPress compatibility deprecation notices.
 - **Microservice Isolation**: Each service runs in its own dedicated container (`nginx`, `wordpress`, `mariadb`).
 - **Encrypted Entrypoint**: Traffic is restricted exclusively to NGINX on HTTPS (port 443) using TLS v1.2 and v1.3.
 - **Secure Secret Management**: Sensitive credentials are read at runtime via Docker secrets (`/run/secrets/`), avoiding cleartext leakages.
 - **Host Persistence**: WordPress site files and database tables persist on host storage under `/home/login/data`.
+- **Utilisation & Cleanup Sheet**: Integrated a comprehensive initialization and cleanup operation sheet into documentation (`USER_DOC.md` and `DEV_DOC.md`).
 
 ---
 
@@ -26,8 +28,8 @@ The stack is designed according to strict system administration rules:
   - Ensures clean process execution with PID 1 delegating directly to `mysqld`.
 
 #### B. WordPress + PHP-FPM (`srcs/requirements/wordpress/`)
-- **Base Image**: `debian:bullseye`
-- **Config ([www.conf](file:///home/souhail/Desktop/Desktop/inception/srcs/requirements/wordpress/conf/www.conf))**: Configures PHP 7.4-FPM pool listening on `0.0.0.0:9000` (FastCGI).
+- **Base Image**: `debian:bookworm` (Debian 12)
+- **Config ([www.conf](file:///home/souhail/Desktop/Desktop/inception/srcs/requirements/wordpress/conf/www.conf))**: Configures PHP 8.2-FPM pool listening on `0.0.0.0:9000` (FastCGI).
 - **Automation Script ([wp-config-create.sh](file:///home/souhail/Desktop/Desktop/inception/srcs/requirements/wordpress/tools/wp-config-create.sh))**:
   - Validates that the administrator's username (`WP_ADMIN_USER`) does **not** contain forbidden substrings (`admin`/`administrator`).
   - Waits for MariaDB health check (`mysqladmin ping`) prior to setup.
@@ -44,50 +46,37 @@ The stack is designed according to strict system administration rules:
 
 ---
 
-### 2. Orchestration & Networking (`srcs/docker-compose.yml`)
+## 📋 Infrastructure Utilisation & Cleanup Sheet
 
-- **Custom Network (`inception-network`)**: User-defined bridge network providing isolated DNS name resolution between containers. No `--link` or host network directives are used.
-- **Persistent Volumes**:
-  - `mariadb_data` mapped to `${DATA_PATH}/mariadb` (`/home/login/data/mariadb`).
-  - `wordpress_data` mapped to `${DATA_PATH}/wordpress` (`/home/login/data/wordpress`).
-- **Secrets Wiring**:
-  - Mounted from the root `/secrets` directory into container `/run/secrets/`.
-- **Restart Policies**: All containers have `restart: always` to ensure resilient crash recovery.
+### Initialization Workflow
+1. Map local domain in `/etc/hosts`:
+   `echo "127.0.0.1 sologin.42.fr" | sudo tee -a /etc/hosts`
+2. Build images & start container stack:
+   `make up`
+3. Inspect container status:
+   `make ps`
 
----
+### Operational Verification
+1. Access web interface: `https://sologin.42.fr`
+2. Test TLS 1.2 protocol enforcement: `curl -v -k --tlsv1.2 https://sologin.42.fr`
+3. Test TLS 1.3 protocol enforcement: `curl -v -k --tlsv1.3 https://sologin.42.fr`
 
-### 3. Automation Tooling (`Makefile`)
-
-The root `Makefile` standardizes build lifecycle management:
-- `make up`: Creates host data directories (`/home/login/data/...`), builds images, and starts containers in detached mode.
-- `make down`: Gracefully stops and removes containers.
-- `make fclean`: Cleans containers, networks, images, persistent volumes, and wipes host data directories.
-- `make re`: Full clean rebuild cycle.
+### Cleanup Workflow
+- **Stop containers**: `make stop`
+- **Tear down stack (keep data)**: `make down`
+- **System prune**: `make clean`
+- **Complete purge (remove data & images)**: `make fclean`
 
 ---
 
 ## 🔍 Validation & Testing Checklist
 
-- [x] **No pre-built app images**: Images built exclusively from custom Dockerfiles (`debian:bullseye`).
-- [x] **No `latest` tag**: All images explicitly tagged (e.g., `mariadb:v1.0`, `wordpress:v1.0`, `nginx:v1.0`).
+- [x] **No pre-built app images**: Images built exclusively from custom Dockerfiles (`debian:bullseye` & `debian:bookworm`).
+- [x] **No `latest` tag**: All images explicitly tagged (`mariadb:v1.0`, `wordpress:v1.0`, `nginx:v1.0`).
+- [x] **PHP 8.2 Modernization**: Upgraded PHP to 8.2 to resolve outdated runtime security warnings.
 - [x] **Port exposure**: Only port 443 is published to the host machine.
 - [x] **Security compliance**: No hardcoded passwords in Dockerfiles or compose configs; secrets managed via Docker secrets.
 - [x] **Admin username compliance**: Admin username checked against regex `admin|administrator` during setup.
 - [x] **Data persistence**: Verified data remains intact across `docker compose down` and stack restarts.
 - [x] **Daemon execution**: PID 1 processes run daemons directly without hacky `tail -f` or infinite loop entrypoint scripts.
-
----
-
-## 🚀 Deployment Instructions
-
-```bash
-# 1. Add local host mapping
-echo "127.0.0.1 sologin.42.fr" | sudo tee -a /etc/hosts
-
-# 2. Launch the infrastructure
-make up
-
-# 3. Verify TLS protocols
-curl -v -k --tlsv1.2 https://sologin.42.fr
-curl -v -k --tlsv1.3 https://sologin.42.fr
-```
+- [x] **Documentation & Utilisation Sheet**: Added operational setup, verification, and cleanup instructions to `USER_DOC.md` and `DEV_DOC.md`.

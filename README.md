@@ -23,7 +23,7 @@ This project implements a fully isolated, secure multi-container web infrastruct
                                     v
                  +--------------------------------------+
                  |         WordPress Container          |
-                 |              (PHP-FPM)               |
+                 |       (PHP 8.2-FPM on Debian)        |
                  +--------------------------------------+
                                     |
                             MySQL (port 3306)
@@ -45,6 +45,7 @@ This project implements a fully isolated, secure multi-container web infrastruct
 ├── README.md
 ├── USER_DOC.md
 ├── DEV_DOC.md
+├── PULL_REQUEST.md
 ├── secrets/
 │   ├── db_password.txt
 │   ├── db_root_password.txt
@@ -71,6 +72,44 @@ This project implements a fully isolated, secure multi-container web infrastruct
 
 ---
 
+## Quick Utilisation & Cleanup Sheet
+
+Detailed operations documentation is available in [USER_DOC.md](file:///home/souhail/Desktop/Desktop/inception/USER_DOC.md) and developer specs in [DEV_DOC.md](file:///home/souhail/Desktop/Desktop/inception/DEV_DOC.md).
+
+### 1. Initialization
+```bash
+# Step 1: Map host IP to domain
+echo "127.0.0.1 sologin.42.fr" | sudo tee -a /etc/hosts
+
+# Step 2: Build images, create data directories, and launch container stack
+make up
+
+# Step 3: Check running containers
+make ps
+```
+
+### 2. Operational Access
+- **Web Application**: `https://sologin.42.fr`
+- **TLS 1.2 Verification**: `curl -v -k --tlsv1.2 https://sologin.42.fr`
+- **TLS 1.3 Verification**: `curl -v -k --tlsv1.3 https://sologin.42.fr`
+
+### 3. Cleanup & Reset Options
+```bash
+# Stop running containers:
+make stop
+
+# Stop containers and remove network/volume definitions (keep persistent data):
+make down
+
+# Clean unused Docker system resources:
+make clean
+
+# Complete Purge: Remove containers, networks, images, and wipe all host data:
+make fclean
+```
+
+---
+
 ## Technical Design & Comparative Analysis
 
 ### 1. Virtual Machines vs. Docker Containers
@@ -88,20 +127,3 @@ This project implements a fully isolated, secure multi-container web infrastruct
 ### 4. Docker Named Volumes vs. Bind Mounts
 - **Bind Mounts**: Directly expose host directory paths to containers. Host permission misconfigurations can break container execution.
 - **Docker Named Volumes**: Managed by Docker with explicit storage configuration. In this project, named volumes map persistent data to `/home/login/data` on the host machine using local volume drivers, guaranteeing data persistence across stack rebuilds.
-
----
-
-## How to Run
-
-1. **Configure local DNS (`/etc/hosts`)**:
-   ```bash
-   echo "127.0.0.1 sologin.42.fr" | sudo tee -a /etc/hosts
-   ```
-
-2. **Build and launch the stack**:
-   ```bash
-   make up
-   ```
-
-3. **Access the application**:
-   Open browser at `https://sologin.42.fr`

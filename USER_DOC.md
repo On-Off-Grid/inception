@@ -1,66 +1,109 @@
-# User Operations Guide (USER_DOC.md)
+# User Operations Guide & Utilisation Sheet (USER_DOC.md)
 
-## 1. Quick Start Guide
+This document serves as the complete operational sheet for initializing, managing, testing, and cleaning up the **Inception** multi-container infrastructure stack.
 
-### Prerequisites
-- Linux OS / Virtual Machine with Docker and Docker Compose installed.
-- `sudo` access to edit `/etc/hosts` and create host volume directories.
+---
 
-### Setup Steps
-1. Map host IP to domain in `/etc/hosts`:
+## 1. Prerequisites & Environment Setup
+
+### System Requirements
+- **Operating System**: Linux Virtual Machine (Debian/Ubuntu recommended).
+- **Core Dependencies**: `docker`, `docker compose`, `make`, `curl`, and `sudo` access.
+- **Port Availability**: Port `443` on the host machine must be free.
+
+### Domain Configuration
+Map the host loopback IP address to your 42 domain name (`login.42.fr`, e.g., `sologin.42.fr`) in `/etc/hosts`:
+```bash
+sudo sh -c 'echo "127.0.0.1 sologin.42.fr" >> /etc/hosts'
+```
+
+---
+
+## 2. Infrastructure Utilisation Sheet
+
+### Step A: Stack Initialization
+To set up volume directories, build all custom Docker images, and start containers in detached mode:
+
+```bash
+make up
+```
+
+> **Note**: `make up` automatically runs `make prepare` first to create persistent data storage paths under `${DATA_PATH}` (e.g., `/home/sologin/data/mariadb` and `/home/sologin/data/wordpress`).
+
+### Step B: Verification & Monitoring
+After running `make up`, monitor and verify that all three containers (`mariadb`, `wordpress`, `nginx`) are active and healthy:
+
+1. **Check process status**:
    ```bash
-   sudo sh -c 'echo "127.0.0.1 sologin.42.fr" >> /etc/hosts'
+   make ps
+   ```
+   *All containers should display status `Up` or `Up (healthy)`.*
+
+2. **Stream service logs**:
+   ```bash
+   make logs
    ```
 
-2. Start the infrastructure:
+3. **Verify TLS protocol compliance**:
    ```bash
-   make up
+   # Test TLSv1.2 connection
+   curl -v -k --tlsv1.2 https://sologin.42.fr
+
+   # Test TLSv1.3 connection
+   curl -v -k --tlsv1.3 https://sologin.42.fr
    ```
 
-3. Access WordPress:
-   Open `https://sologin.42.fr` in your browser. Accept the self-signed TLS certificate warning.
+4. **Access WordPress Web Interface**:
+   Open a web browser and navigate to:
+   `https://sologin.42.fr`
+   *(Accept the self-signed certificate notice when prompted).*
 
 ---
 
-## 2. Infrastructure Operations
+## 3. Routine Lifecycle Operations
 
-| Action | Command |
-| --- | --- |
-| **Start stack** | `make up` |
-| **Stop stack** | `make stop` |
-| **Restart stack** | `make down && make up` |
-| **Check running status** | `make ps` |
-| **Stream container logs** | `make logs` |
-| **Purge stack & data** | `make fclean` |
-
----
-
-## 3. Credential & Secrets Management
-
-Passwords and secrets are located in the `secrets/` directory:
-- `secrets/db_password.txt`: Password for MariaDB database user.
-- `secrets/db_root_password.txt`: Password for MariaDB root user.
-- `secrets/wp_admin_password.txt`: Password for WordPress administrator.
-- `secrets/wp_user_password.txt`: Password for WordPress secondary user.
-
-> **Important Constraint**: The WordPress administrator username (`WP_ADMIN_USER` in `srcs/.env`) **must not** contain the words `admin` or `administrator`.
+| Operation | Command | Description |
+| --- | --- | --- |
+| **Start Stack** | `make start` | Resumes existing stopped containers without rebuilding. |
+| **Stop Stack** | `make stop` | Pauses running containers without destroying them. |
+| **Rebuild & Restart** | `make re` | Performs full teardown, rebuilds images, and restarts stack. |
+| **View Logs** | `make logs` | Streams real-time stdout/stderr from all containers. |
+| **Check Status** | `make ps` | Displays status of all managed containers. |
 
 ---
 
-## 4. Basic Health & Diagnostics
+## 4. Stack Cleanup & Teardown
 
-Check status of containers:
+Depending on the desired level of cleanup, execute one of the following procedures:
+
+### Option 1: Basic Teardown (Preserve Data & Images)
+Stops containers and removes container instances and network bridges while preserving persistent volume data on disk:
 ```bash
-make status
+make down
 ```
 
-Verify TLS protocol enforcement (TLSv1.2 / TLSv1.3):
+### Option 2: Soft System Prune (Remove Stopped Containers & Build Cache)
+Stops containers and prunes unused Docker system resources without deleting persistent volumes:
 ```bash
-curl -v -k --tlsv1.2 https://sologin.42.fr
-curl -v -k --tlsv1.3 https://sologin.42.fr
+make clean
 ```
 
-Verify non-TLS (HTTP) is refused / restricted:
+### Option 3: Full Purge & Reset (`fclean`)
+Stops all services, removes containers, networks, volume definitions, and images, and **completely wipes host persistent data directories** under `/home/login/data`:
 ```bash
-curl -v http://sologin.42.fr
+make fclean
 ```
+
+> ⚠️ **Warning**: Running `make fclean` permanently deletes all WordPress site uploads, database records, and site configurations.
+
+---
+
+## 5. Credentials & Secrets Reference
+
+Confidential parameters are managed via local Docker secrets in the `/secrets/` directory:
+- `secrets/db_root_password.txt`: Administrative password for MariaDB `root`.
+- `secrets/db_password.txt`: Database password for WordPress MySQL user.
+- `secrets/wp_admin_password.txt`: Password for WordPress administrator (`WP_ADMIN_USER`).
+- `secrets/wp_user_password.txt`: Password for regular WordPress author user (`WP_USER`).
+
+> 🛑 **Security Requirement**: The administrator username (`WP_ADMIN_USER`) is set to `site_supervisor` in `srcs/.env`. Per 42 rules, admin usernames **must not** contain `admin` or `administrator` in any case format.
