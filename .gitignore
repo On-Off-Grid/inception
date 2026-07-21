@@ -1,0 +1,14 @@
+# Environment and Secrets
+srcs/.env
+secrets/*
+!secrets/.gitkeep
+
+# Operating system / IDE files
+.DS_Store
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Docker / Volume build artifacts
+*.log
