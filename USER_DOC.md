@@ -12,9 +12,9 @@ This document serves as the complete operational sheet for initializing, managin
 - **Port Availability**: Port `443` on the host machine must be free.
 
 ### Domain Configuration
-Map the host loopback IP address to your 42 domain name (`login.42.fr`, e.g., `sologin.42.fr`) in `/etc/hosts`:
+Map the host loopback IP address to your 42 domain name (`login.42.fr`, e.g., `souichou.42.fr`) in `/etc/hosts`:
 ```bash
-sudo sh -c 'echo "127.0.0.1 sologin.42.fr" >> /etc/hosts'
+sudo sh -c 'echo "127.0.0.1 souichou.42.fr" >> /etc/hosts'
 ```
 
 ---
@@ -28,7 +28,7 @@ To set up volume directories, build all custom Docker images, and start containe
 make up
 ```
 
-> **Note**: `make up` automatically runs `make prepare` first to create persistent data storage paths under `${DATA_PATH}` (e.g., `/home/sologin/data/mariadb` and `/home/sologin/data/wordpress`).
+> **Note**: `make up` automatically runs `make prepare` first to create persistent data storage paths under `${DATA_PATH}` (e.g., `/home/souichou/data/mariadb` and `/home/souichou/data/wordpress`).
 
 ### Step B: Verification & Monitoring
 After running `make up`, monitor and verify that all three containers (`mariadb`, `wordpress`, `nginx`) are active and healthy:
@@ -47,15 +47,15 @@ After running `make up`, monitor and verify that all three containers (`mariadb`
 3. **Verify TLS protocol compliance**:
    ```bash
    # Test TLSv1.2 connection
-   curl -v -k --tlsv1.2 https://sologin.42.fr
+   curl -v -k --tlsv1.2 https://souichou.42.fr
 
    # Test TLSv1.3 connection
-   curl -v -k --tlsv1.3 https://sologin.42.fr
+   curl -v -k --tlsv1.3 https://souichou.42.fr
    ```
 
 4. **Access WordPress Web Interface**:
    Open a web browser and navigate to:
-   `https://sologin.42.fr`
+   `https://souichou.42.fr`
    *(Accept the self-signed certificate notice when prompted).*
 
 ---

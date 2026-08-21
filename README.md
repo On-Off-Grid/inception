@@ -79,7 +79,7 @@ Detailed operations documentation is available in [USER_DOC.md](file:///home/sou
 ### 1. Initialization
 ```bash
 # Step 1: Map host IP to domain
-echo "127.0.0.1 sologin.42.fr" | sudo tee -a /etc/hosts
+echo "127.0.0.1 souichou.42.fr" | sudo tee -a /etc/hosts
 
 # Step 2: Build images, create data directories, and launch container stack
 make up
@@ -89,9 +89,9 @@ make ps
 ```
 
 ### 2. Operational Access
-- **Web Application**: `https://sologin.42.fr`
-- **TLS 1.2 Verification**: `curl -v -k --tlsv1.2 https://sologin.42.fr`
-- **TLS 1.3 Verification**: `curl -v -k --tlsv1.3 https://sologin.42.fr`
+- **Web Application**: `https://souichou.42.fr`
+- **TLS 1.2 Verification**: `curl -v -k --tlsv1.2 https://souichou.42.fr`
+- **TLS 1.3 Verification**: `curl -v -k --tlsv1.3 https://souichou.42.fr`
 
 ### 3. Cleanup & Reset Options
 ```bash

@@ -42,7 +42,7 @@ Data persists on the host system via Docker named volume bind driver options:
 - WordPress files: `${DATA_PATH}/wordpress` -> mounted to `/var/www/wordpress`
 
 To verify persistence:
-1. Create a post in WordPress via web UI (`https://sologin.42.fr`) or WP-CLI.
+1. Create a post in WordPress via web UI (`https://souichou.42.fr`) or WP-CLI.
 2. Run `make down`.
 3. Run `make up`.
 4. Verify the post remains stored in MariaDB/WordPress files on disk.
