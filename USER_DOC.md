@@ -58,6 +58,28 @@ After running `make up`, monitor and verify that all three containers (`mariadb`
    `https://souichou.42.fr`
    *(Accept the self-signed certificate notice when prompted).*
 
+5. **Evaluation Verification Commands**:
+   - **Inspect Named Volumes**:
+     ```bash
+     docker volume inspect mariadb_data wordpress_data
+     ```
+     *(Verify `device` path points to `/home/<login>/data/...`)*
+
+   - **Inspect Custom Network**:
+     ```bash
+     docker network inspect inception-network
+     ```
+     *(Verify all 3 containers are attached to `inception-network`)*
+
+   - **Log into MariaDB Database**:
+     ```bash
+     docker exec -it mariadb mysql -u root -p
+     ```
+     *(Enter password from `secrets/db_root_password.txt`)*
+
+   - **Evaluation Defense Walkthrough**:
+     See [EVALUATION_GUIDE.md](file:///home/souhail/Desktop/Desktop/cercle_dzab/inception/EVALUATION_GUIDE.md) for full answers to theoretical questions and complete evaluation criteria checklist.
+
 ---
 
 ## 3. Routine Lifecycle Operations

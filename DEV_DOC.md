@@ -19,17 +19,17 @@ docker compose -f srcs/docker-compose.yml --env-file srcs/.env up -d wordpress
 ## 2. Container Architecture & Dockerfiles
 
 ### MariaDB Service (`srcs/requirements/mariadb`)
-- **Base Image**: `debian:bullseye`
+- **Base Image**: `debian:bookworm`
 - **Configuration**: `/etc/mysql/mariadb.conf.d/50-server.cnf` (binds to `0.0.0.0`, port 3306).
 - **Initialization**: `/usr/local/bin/mariadb-init.sh` runs `mysql_install_db` and configures root / user passwords from `/run/secrets/`.
 
 ### WordPress + PHP-FPM Service (`srcs/requirements/wordpress`)
-- **Base Image**: `debian:bookworm` (Upgraded to support native PHP 8.2 & resolve PHP 7.4 end-of-life deprecation notices).
+- **Base Image**: `debian:bookworm` (Provides native PHP 8.2 & modern dependencies).
 - **Configuration**: `/etc/php/8.2/fpm/pool.d/www.conf` (listens on `0.0.0.0:9000`).
-- **Initialization**: Uses `wp-cli` in `/usr/local/bin/wp-config-create.sh` to download WordPress core, connect to MariaDB, and register 2 users (1 non-admin admin, 1 author).
+- **Initialization**: Uses `wp-cli` in `/usr/local/bin/wp-config-create.sh` to download WordPress core, connect to MariaDB, and register 2 users (1 non-admin supervisor, 1 author).
 
 ### NGINX Service (`srcs/requirements/nginx`)
-- **Base Image**: `debian:bullseye`
+- **Base Image**: `debian:bookworm`
 - **Configuration**: `/etc/nginx/conf.d/default.conf` (listens on port 443 with TLS 1.2/1.3 only).
 - **Initialization**: Generates self-signed certificates dynamically using OpenSSL in `/usr/local/bin/nginx-entrypoint.sh`.
 
