@@ -52,6 +52,7 @@ services:
       - .env
     volumes:
       - wordpress_data:/var/www/wordpress
+      - ../../Patterns-in-code-and-culture:/var/www/static:ro
     networks:
       - inception-network
 
